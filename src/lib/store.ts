@@ -16,6 +16,7 @@ export const defaultMenuItems: MenuItem[] = [
 export const defaultSettings: Settings = {
   parcelCharge: 10,
   businessDate: '',
+  theme: 'dark',
 };
 
 export const loadData = async <T>(key: string, defaultValue: T): Promise<T> => {

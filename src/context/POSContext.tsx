@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { MenuItem, Order, Settings } from '../types';
 import { defaultMenuItems, defaultSettings, loadData, saveData } from '../lib/store';
 import { v4 as uuidv4 } from 'uuid';
+import { collection, doc, setDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface POSContextType {
   menuItems: MenuItem[];
@@ -35,42 +37,69 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [settings, setSettingsState] = useState<Settings>(defaultSettings);
   const [orders, setOrdersState] = useState<Order[]>([]);
   const [activeOrder, setActiveOrderState] = useState<Order | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  
+  const [menuLoaded, setMenuLoaded] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
+
+  const isLoaded = menuLoaded && settingsLoaded && ordersLoaded;
 
   useEffect(() => {
-    const initData = async () => {
-      const loadedMenuItems = await loadData<MenuItem[]>('menuItems', defaultMenuItems);
-      const loadedSettings = await loadData<Settings>('settings', defaultSettings);
-      const loadedOrders = await loadData<Order[]>('orders', []);
-      const loadedActiveOrder = await loadData<Order | null>('activeOrder', null);
-      
-      setMenuItemsState(loadedMenuItems);
-      setSettingsState(loadedSettings);
-      setOrdersState(loadedOrders);
+    // Load local active order first (kept local to device)
+    loadData<Order | null>('activeOrder', null).then(loadedActiveOrder => {
       setActiveOrderState(loadedActiveOrder);
-      setIsLoaded(true);
+    });
+
+    // Subscribe to Settings
+    const unsubscribeSettings = onSnapshot(doc(db, 'appData', 'settings'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as Partial<Settings>;
+        setSettingsState({ ...defaultSettings, ...data });
+      } else {
+        setSettingsState(defaultSettings);
+        setDoc(doc(db, 'appData', 'settings'), defaultSettings);
+      }
+      setSettingsLoaded(true);
+    });
+
+    // Subscribe to Menu Items
+    const unsubscribeMenu = onSnapshot(doc(db, 'appData', 'menuItems'), (docSnap) => {
+      if (docSnap.exists()) {
+        setMenuItemsState(docSnap.data().items as MenuItem[]);
+      } else {
+        setMenuItemsState(defaultMenuItems);
+        setDoc(doc(db, 'appData', 'menuItems'), { items: defaultMenuItems });
+      }
+      setMenuLoaded(true);
+    });
+
+    // Subscribe to Orders
+    const unsubscribeOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
+      const loadedOrders: Order[] = [];
+      snapshot.forEach(doc => loadedOrders.push(doc.data() as Order));
+      loadedOrders.sort((a, b) => a.serialNumber - b.serialNumber);
+      setOrdersState(loadedOrders);
+      setOrdersLoaded(true);
+    });
+
+    return () => {
+      unsubscribeSettings();
+      unsubscribeMenu();
+      unsubscribeOrders();
     };
-    initData();
   }, []);
 
   const setMenuItems = (items: MenuItem[]) => {
-    setMenuItemsState(items);
-    saveData('menuItems', items);
+    setDoc(doc(db, 'appData', 'menuItems'), { items });
   };
 
   const updateSettings = (newSettings: Settings) => {
-    setSettingsState(newSettings);
-    saveData('settings', newSettings);
-  };
-
-  const setOrders = (newOrders: Order[]) => {
-    setOrdersState(newOrders);
-    saveData('orders', newOrders);
+    setDoc(doc(db, 'appData', 'settings'), newSettings);
   };
 
   const setActiveOrder = (order: Order | null) => {
     setActiveOrderState(order);
-    saveData('activeOrder', order);
+    saveData('activeOrder', order); // Keep active order local
   };
 
   const getNextSerialNumber = () => {
@@ -114,50 +143,38 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const confirmOrder = (order: Order) => {
     const confirmedOrder: Order = { ...order, status: 'PENDING' };
-    const existingIndex = orders.findIndex(o => o.id === order.id);
-    let newOrders = [...orders];
-    if (existingIndex >= 0) {
-      newOrders[existingIndex] = confirmedOrder;
-    } else {
-      newOrders.push(confirmedOrder);
-    }
-    setOrders(newOrders);
+    setDoc(doc(db, 'orders', order.id), confirmedOrder);
     setActiveOrder(null);
   };
 
   const completeOrder = (orderId: string) => {
-    const newOrders = orders.map(o => {
-      if (o.id === orderId) {
-        return { ...o, status: 'SUCCESSFUL' as const, completedAt: Date.now() };
-      }
-      return o;
-    });
-    setOrders(newOrders);
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setDoc(doc(db, 'orders', orderId), { ...order, status: 'SUCCESSFUL', completedAt: Date.now() }, { merge: true });
+    }
   };
 
   const undoCompleteOrder = (orderId: string) => {
-    const newOrders = orders.map(o => {
-      if (o.id === orderId) {
-        return { ...o, status: 'PENDING' as const };
-      }
-      return o;
-    });
-    setOrders(newOrders);
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setDoc(doc(db, 'orders', orderId), { ...order, status: 'PENDING' }, { merge: true });
+    }
   };
 
-  const clearAllOrders = () => {
-    setOrders([]);
+  const clearAllOrders = async () => {
+    const batch = writeBatch(db);
+    orders.forEach(order => {
+      batch.delete(doc(db, 'orders', order.id));
+    });
+    await batch.commit();
     setActiveOrder(null);
   };
 
   const updateOrderPaymentStatus = (orderId: string, status: 'PAID' | 'NOT_PAID') => {
-    const newOrders = orders.map(o => {
-      if (o.id === orderId) {
-        return { ...o, paymentStatus: status, paymentUpdatedAt: Date.now() };
-      }
-      return o;
-    });
-    setOrders(newOrders);
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setDoc(doc(db, 'orders', orderId), { ...order, paymentStatus: status, paymentUpdatedAt: Date.now() }, { merge: true });
+    }
     
     if (activeOrder && activeOrder.id === orderId) {
       setActiveOrder({ ...activeOrder, paymentStatus: status, paymentUpdatedAt: Date.now() });
@@ -165,17 +182,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const editOrder = (order: Order) => {
-    const newOrders = orders.map(o => o.id === order.id ? order : o);
-    setOrders(newOrders);
+    setDoc(doc(db, 'orders', order.id), order);
   };
 
   const loadOrderForEdit = (orderId: string) => {
     const order = orders.find(o => o.id === orderId);
     if (order) {
-      // Put it back to DRAFT or keep it PENDING? The requirements say:
-      // "After editing, the order should remain in Pending Orders unless the user completes it."
-      // But it needs to be the active order while editing.
-      // We can just load it into activeOrder.
       setActiveOrder(order);
     }
   };
@@ -212,3 +224,4 @@ export const usePOS = () => {
   }
   return context;
 };
+

@@ -13,15 +13,15 @@ export const CurrentOrder: React.FC = () => {
 
   if (!activeOrder) {
     return (
-      <section className="mb-6 bg-stone-900 p-6 rounded-2xl shadow-sm border border-stone-800 text-center">
-        <h3 className="text-xl font-bold text-stone-200 mb-4">New Order</h3>
+      <section className="mb-6 bg-white dark:bg-stone-900 p-6 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-800 text-center transition-colors duration-200">
+        <h3 className="text-xl font-bold text-stone-800 dark:text-stone-200 mb-4">New Order</h3>
         <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3 max-w-md mx-auto">
           <input 
             type="text"
             placeholder="Customer Name"
             value={customerNameInput}
             onChange={(e) => setCustomerNameInput(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-stone-700 bg-stone-800 text-stone-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 text-lg font-medium placeholder-stone-500"
+            className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/50 text-lg font-medium placeholder-stone-400 dark:placeholder-stone-500 transition-colors"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && customerNameInput.trim()) {
                 startNewOrder(customerNameInput.trim());
@@ -52,6 +52,11 @@ export const CurrentOrder: React.FC = () => {
   const grandTotal = subtotal + parcelTotal;
 
   const handleQuantityChange = (menuItemId: string, qty: number) => {
+    if (qty === 0) {
+      const updatedItems = activeOrder.items.filter(item => item.menuItemId !== menuItemId);
+      updateActiveOrder({ ...activeOrder, items: updatedItems });
+      return;
+    }
     const updatedItems = activeOrder.items.map(item => {
       if (item.menuItemId === menuItemId) {
         // Ensure parcel quantity doesn't exceed total quantity
@@ -87,15 +92,15 @@ export const CurrentOrder: React.FC = () => {
   };
 
   return (
-    <section className="mb-6 bg-stone-900 p-4 lg:p-6 rounded-2xl shadow-md border border-stone-800">
+    <section className="mb-6 bg-white dark:bg-stone-900 p-4 lg:p-6 rounded-2xl shadow-md border border-stone-200 dark:border-stone-800 transition-colors duration-200">
       
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 border-b border-stone-800 pb-4">
+      <div className="flex justify-between items-center mb-6 border-b border-stone-100 dark:border-stone-800 pb-4">
         <div className="flex items-center space-x-3">
-          <div className="bg-amber-900/50 text-amber-400 font-bold px-3 py-1.5 rounded-lg text-lg">
+          <div className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-400 font-bold px-3 py-1.5 rounded-lg text-lg">
             #{activeOrder.serialNumber}
           </div>
-          <h2 className="text-2xl font-bold text-stone-200">{activeOrder.customerName}</h2>
+          <h2 className="text-2xl font-bold text-stone-800 dark:text-stone-200">{activeOrder.customerName}</h2>
         </div>
         
         {!isReviewing && (
@@ -143,36 +148,36 @@ export const CurrentOrder: React.FC = () => {
 
       {/* Order Summary & Actions */}
       {itemsWithQuantity.length > 0 && (
-        <div className="bg-stone-800 p-5 rounded-xl border border-stone-700">
+        <div className="bg-stone-50 dark:bg-stone-800 p-5 rounded-xl border border-stone-200 dark:border-stone-700 transition-colors">
           
-          <div className="space-y-2 mb-4 text-stone-400 font-medium">
+          <div className="space-y-2 mb-4 text-stone-600 dark:text-stone-400 font-medium">
             <div className="flex justify-between">
               <span>Subtotal</span>
               <span>₹{subtotal}</span>
             </div>
             {totalParcelQuantity > 0 && (
-              <div className="flex justify-between text-orange-400">
+              <div className="flex justify-between text-orange-700 dark:text-orange-400">
                 <span>Parcel Charges ({totalParcelQuantity} × ₹{activeOrder.parcelChargeAtOrder})</span>
                 <span>₹{parcelTotal}</span>
               </div>
             )}
-            <div className="flex justify-between pt-2 border-t border-stone-700 text-2xl font-bold text-stone-200">
+            <div className="flex justify-between pt-2 border-t border-stone-200 dark:border-stone-700 text-2xl font-bold text-stone-900 dark:text-stone-200">
               <span>TOTAL</span>
               <span>₹{grandTotal}</span>
             </div>
           </div>
 
           {isReviewing ? (
-            <div className="space-y-4 pt-4 border-t border-stone-700">
+            <div className="space-y-4 pt-4 border-t border-stone-200 dark:border-stone-700">
               
-              <label className="flex items-center space-x-3 p-4 border border-stone-700 rounded-xl cursor-pointer transition-colors bg-stone-900 hover:bg-stone-800">
+              <label className="flex items-center space-x-3 p-4 border border-stone-200 dark:border-stone-700 rounded-xl cursor-pointer transition-colors bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800">
                 <input 
                   type="checkbox"
                   checked={paymentStatusChecked}
                   onChange={(e) => setPaymentStatusChecked(e.target.checked)}
-                  className="w-6 h-6 rounded border-stone-700 bg-stone-800 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-stone-900"
+                  className="w-6 h-6 rounded border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-emerald-600 dark:text-emerald-500 focus:ring-emerald-500 dark:focus:ring-emerald-500/50 focus:ring-offset-white dark:focus:ring-offset-stone-900"
                 />
-                <span className={clsx("text-lg font-bold", paymentStatusChecked ? "text-emerald-400" : "text-stone-500")}>
+                <span className={clsx("text-lg font-bold", paymentStatusChecked ? "text-emerald-700 dark:text-emerald-400" : "text-stone-500")}>
                   {paymentStatusChecked ? "PAID" : "Not Paid"}
                 </span>
               </label>
@@ -180,7 +185,7 @@ export const CurrentOrder: React.FC = () => {
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 <button 
                   onClick={() => setIsReviewing(false)}
-                  className="flex-1 py-4 flex items-center justify-center font-bold text-lg bg-stone-700 text-stone-200 rounded-xl hover:bg-stone-600 transition-colors"
+                  className="flex-1 py-4 flex items-center justify-center font-bold text-lg bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl hover:bg-stone-300 dark:hover:bg-stone-600 transition-colors"
                 >
                   <ArrowLeft size={20} className="mr-2" /> Change Order
                 </button>

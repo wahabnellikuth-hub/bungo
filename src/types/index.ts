@@ -8,6 +8,7 @@ export interface MenuItem {
 export interface Settings {
   parcelCharge: number;
   businessDate?: string; // Format YYYY-MM-DD. If not set, uses system date
+  theme: 'light' | 'dark';
 }
 
 export interface OrderItem {

@@ -57,25 +57,25 @@ export const ExportManager: React.FC = () => {
 
   return (
     <section>
-      <h3 className="text-lg font-bold text-stone-200 mb-3">Export Data</h3>
-      <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 text-center">
-        <p className="text-sm text-stone-400 mb-4 font-medium">Download all order history as a CSV file for Excel or Google Sheets.</p>
+      <h3 className="text-lg font-bold text-stone-800 dark:text-stone-200 mb-3">Export Data</h3>
+      <div className="bg-stone-50 dark:bg-stone-950 p-4 rounded-xl border border-stone-200 dark:border-stone-800 text-center transition-colors">
+        <p className="text-sm text-stone-600 dark:text-stone-400 mb-4 font-medium">Download all order history as a CSV file for Excel or Google Sheets.</p>
         <button 
           onClick={handleExport}
-          className="w-full flex items-center justify-center px-4 py-3 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition-colors shadow-sm mb-6"
+          className="w-full flex items-center justify-center px-4 py-3 bg-stone-800 dark:bg-amber-600 text-white font-bold rounded-xl hover:bg-stone-900 dark:hover:bg-amber-700 transition-colors shadow-sm mb-6"
         >
           <Download size={20} className="mr-2" /> Export Orders
         </button>
 
-        <div className="border-t border-stone-800 pt-6 mt-2">
-          <p className="text-sm text-red-400 mb-4 font-medium">Danger Zone: Wipe all data to start fresh for a new day.</p>
+        <div className="border-t border-stone-200 dark:border-stone-800 pt-6 mt-2">
+          <p className="text-sm text-red-600 dark:text-red-400 mb-4 font-medium">Danger Zone: Wipe all data to start fresh for a new day.</p>
           <button 
             onClick={() => {
               if (window.confirm("Are you sure you want to completely wipe all orders? Make sure you have exported today's data first!")) {
                 clearAllOrders();
               }
             }}
-            className="w-full flex items-center justify-center px-4 py-3 bg-red-900/30 text-red-400 font-bold rounded-xl hover:bg-red-900/50 border border-red-900/50 transition-colors"
+            className="w-full flex items-center justify-center px-4 py-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-900/50 transition-colors"
           >
             <Trash2 size={20} className="mr-2" /> Clear All Orders
           </button>
