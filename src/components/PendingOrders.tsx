@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { usePOS } from '../context/POSContext';
-import { Play, Edit2, Check, Box } from 'lucide-react';
+import { Play, Edit2, Check, Box, Eye } from 'lucide-react';
 import clsx from 'clsx';
 import { Order } from '../types';
 
 export const PendingOrders: React.FC = () => {
   const { orders, updateOrderPaymentStatus, loadOrderForEdit, completeOrder } = usePOS();
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [showItemCounts, setShowItemCounts] = useState(false);
 
   const pendingOrders = orders.filter(o => o.status === 'PENDING').sort((a, b) => a.serialNumber - b.serialNumber);
 
@@ -26,9 +27,50 @@ export const PendingOrders: React.FC = () => {
     return order.items.reduce((sum, item) => sum + item.parcelQuantity, 0);
   };
 
+  const itemSummary = pendingOrders.reduce((acc, order) => {
+    order.items.forEach(item => {
+      if (!acc[item.name]) {
+        acc[item.name] = { having: 0, parcel: 0 };
+      }
+      acc[item.name].having += (item.quantity - item.parcelQuantity);
+      acc[item.name].parcel += item.parcelQuantity;
+    });
+    return acc;
+  }, {} as Record<string, { having: number; parcel: number }>);
+
+  const itemSummaryEntries = Object.entries(itemSummary);
+
   return (
     <section className="mb-6">
-      <h2 className="text-xl font-bold text-red-600 dark:text-red-500 mb-4 px-2">Pending Orders</h2>
+      <div className="flex justify-between items-center mb-4 px-2 relative">
+        <h2 className="text-xl font-bold text-red-600 dark:text-red-500">Pending Orders</h2>
+        <button 
+          onClick={() => setShowItemCounts(!showItemCounts)}
+          className="text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 p-1"
+          title="View Item Counts"
+        >
+          <Eye size={20} />
+        </button>
+        {showItemCounts && (
+          <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-xl rounded-xl z-10 p-3 max-h-80 overflow-y-auto">
+            <div className="font-bold text-stone-800 dark:text-stone-200 border-b border-stone-200 dark:border-stone-800 pb-2 mb-2">Item Counts</div>
+            {itemSummaryEntries.length > 0 ? (
+              itemSummaryEntries.map(([name, counts]) => (
+                <div key={name} className="text-sm py-1.5 border-b last:border-0 border-stone-100 dark:border-stone-800/50 flex justify-between items-start gap-2">
+                  <span className="font-medium text-stone-700 dark:text-stone-300 break-words flex-1">{name}</span>
+                  <span className="text-stone-500 dark:text-stone-400 whitespace-nowrap">
+                    {counts.having > 0 ? `${counts.having.toString().padStart(2, '0')}(🍽️)` : ''}
+                    {counts.having > 0 && counts.parcel > 0 ? ', ' : ''}
+                    {counts.parcel > 0 ? `${counts.parcel.toString().padStart(2, '0')}(📦)` : ''}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-stone-500 dark:text-stone-400">No items</div>
+            )}
+          </div>
+        )}
+      </div>
       
       <div className="space-y-3">
         {pendingOrders.map(order => {
