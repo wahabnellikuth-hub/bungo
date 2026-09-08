@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { MenuItem, Order, Settings } from '../types';
 import { defaultMenuItems, defaultSettings, loadData, saveData } from '../lib/store';
 import { v4 as uuidv4 } from 'uuid';
-import { collection, doc, setDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, onSnapshot, writeBatch, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 interface POSContextType {
@@ -73,8 +73,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setMenuLoaded(true);
     });
 
-    // Subscribe to Orders
-    const unsubscribeOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
+    // Subscribe to Orders (Optimized to load only recent orders for faster startup)
+    const ordersQuery = query(
+      collection(db, 'orders'), 
+      orderBy('createdAt', 'desc'), 
+      limit(150)
+    );
+    
+    const unsubscribeOrders = onSnapshot(ordersQuery, (snapshot) => {
       const loadedOrders: Order[] = [];
       snapshot.forEach(doc => loadedOrders.push(doc.data() as Order));
       loadedOrders.sort((a, b) => a.serialNumber - b.serialNumber);
