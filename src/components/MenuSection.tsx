@@ -44,14 +44,14 @@ export const MenuSection: React.FC = () => {
   };
 
   return (
-    <section className="mb-6 bg-white p-4 lg:p-6 rounded-2xl shadow-sm border border-stone-200">
+    <section className="mb-6 bg-stone-900 p-4 lg:p-6 rounded-2xl shadow-sm border border-stone-800">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-stone-800">Available Items</h2>
+        <h2 className="text-xl font-bold text-stone-200">Available Items</h2>
         <button 
           onClick={() => setLockMode(!lockMode)}
           className={clsx(
             "p-2 rounded-lg transition-colors flex items-center space-x-2",
-            lockMode ? "bg-amber-100 text-amber-700 font-bold" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            lockMode ? "bg-amber-900/50 text-amber-400 font-bold" : "bg-stone-800 text-stone-400 hover:bg-stone-700"
           )}
         >
           {lockMode ? <Lock size={20} /> : <Unlock size={20} />}
@@ -70,16 +70,16 @@ export const MenuSection: React.FC = () => {
               disabled={isDisabled && !lockMode}
               className={clsx(
                 "relative flex flex-col items-center justify-center p-4 rounded-xl text-center transition-all duration-200 min-h-[100px]",
-                lockMode ? "border-2 border-dashed border-amber-400 hover:bg-amber-50 cursor-pointer" :
-                isDisabled ? "opacity-50 cursor-not-allowed bg-stone-100 text-stone-400 border border-stone-200" : 
-                "bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 shadow-sm active:scale-95"
+                lockMode ? "border-2 border-dashed border-amber-600 hover:bg-amber-900/20 cursor-pointer" :
+                isDisabled ? "opacity-50 cursor-not-allowed bg-stone-800 text-stone-500 border border-stone-700" : 
+                "bg-stone-800 text-stone-200 border border-stone-700 hover:bg-stone-700 hover:border-stone-600 shadow-sm active:scale-95"
               )}
             >
               <span className="font-bold text-lg leading-tight mb-1">{item.name}</span>
-              <span className={clsx("font-medium", isDisabled && !lockMode ? "text-stone-400" : "text-amber-700")}>₹{item.price}</span>
+              <span className={clsx("font-medium", isDisabled && !lockMode ? "text-stone-500" : "text-amber-400")}>₹{item.price}</span>
               
               {item.isLocked && (
-                <div className="absolute top-2 right-2 text-stone-400">
+                <div className="absolute top-2 right-2 text-stone-500">
                   <Lock size={16} />
                 </div>
               )}

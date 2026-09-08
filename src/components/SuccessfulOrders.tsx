@@ -20,49 +20,49 @@ export const SuccessfulOrders: React.FC = () => {
 
   return (
     <section className="mb-6 opacity-80 hover:opacity-100 transition-opacity">
-      <h2 className="text-xl font-bold text-stone-600 mb-4 px-2">Successful Orders</h2>
+      <h2 className="text-xl font-bold text-stone-400 mb-4 px-2">Successful Orders</h2>
       
       <div className="space-y-2">
         {successfulOrders.map(order => {
           const total = calcTotal(order);
 
           return (
-            <div key={order.id} className="bg-stone-50 rounded-xl border border-stone-200 flex flex-col sm:flex-row items-center p-3 sm:p-4">
+            <div key={order.id} className="bg-stone-950 rounded-xl border border-stone-800 flex flex-col sm:flex-row items-center p-3 sm:p-4">
               
               <div className="flex-1 flex items-center space-x-3 w-full sm:w-auto mb-3 sm:mb-0">
-                <div className="text-stone-500 font-bold px-2 py-1 bg-stone-200 rounded">
+                <div className="text-stone-400 font-bold px-2 py-1 bg-stone-800 rounded">
                   #{order.serialNumber}
                 </div>
-                <div className="font-bold text-stone-700 truncate">
+                <div className="font-bold text-stone-300 truncate">
                   {order.customerName}
                 </div>
               </div>
 
               <div className="flex items-center space-x-4 w-full sm:w-auto justify-between sm:justify-end">
-                <div className="font-bold text-stone-700">
+                <div className="font-bold text-stone-300">
                   ₹{total}
                 </div>
                 
                 {order.paymentStatus === 'PAID' ? (
-                  <div className="text-green-700 font-bold text-sm">
+                  <div className="text-emerald-500 font-bold text-sm">
                     PAID
                   </div>
                 ) : (
                   <button 
                     onClick={() => updateOrderPaymentStatus(order.id, 'PAID')}
-                    className="bg-stone-200 text-stone-700 hover:bg-stone-300 px-3 py-1 rounded font-bold text-sm transition-colors whitespace-nowrap"
+                    className="bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-stone-200 border border-stone-700 px-3 py-1 rounded font-bold text-sm transition-colors whitespace-nowrap"
                   >
                     Mark Paid
                   </button>
                 )}
                 
-                <div className="flex items-center space-x-2 pl-2 border-l border-stone-300">
-                  <span className="flex items-center text-green-600 font-bold">
+                <div className="flex items-center space-x-2 pl-2 border-l border-stone-800">
+                  <span className="flex items-center text-emerald-600 font-bold">
                     <Check size={18} className="mr-1" /> DONE
                   </span>
                   <button 
                     onClick={() => undoCompleteOrder(order.id)}
-                    className="p-1.5 text-stone-400 hover:text-amber-600 hover:bg-stone-200 rounded transition-colors"
+                    className="p-1.5 text-stone-600 hover:text-amber-500 hover:bg-stone-800 rounded transition-colors"
                     title="Undo Complete"
                   >
                     <RotateCcw size={16} />
